@@ -20,13 +20,14 @@
   --ink: #243040;
   --muted: #6a645c;
   --line: #e3dcd3;
+  --wine: #7a3e48;
   --serif: "Newsreader", "Iowan Old Style", Palatino, Georgia, serif;
   --sans: "Source Sans 3", "Avenir Next", "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; }
 
 body {
   margin: 0;
@@ -137,31 +138,98 @@ h1 {
 }
 
 .gallery {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.55rem;
+  --slide: min(32rem, 86%);
+  --gap: 0.55rem;
+  --glide: 2.6s cubic-bezier(0.42, 0.02, 0.16, 1);
   border-top: 1px solid var(--line);
-  padding: 1.35rem 0;
+  padding: 1.35rem 0 1.15rem;
+}
+
+.gallery-track {
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.gallery-track:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 6px;
+}
+
+.gallery-track.is-dragging { cursor: grabbing; }
+
+.gallery-strip {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--gap);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .frame {
+  flex: 0 0 var(--slide);
+  width: var(--slide);
   aspect-ratio: 3 / 4;
   background: #efeae4;
   overflow: hidden;
+  opacity: 0.4;
+  transition: opacity var(--glide);
+  backface-visibility: hidden;
 }
 
-.frame-hero {
-  grid-column: 1 / span 2;
-  grid-row: 1 / span 2;
-  aspect-ratio: auto;
-  min-height: 0;
-}
+.frame.is-current { opacity: 1; }
 
 .frame img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.gallery-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: min(26rem, calc(var(--slide) * 0.86));
+  margin: 0.65rem auto 0;
+}
+
+.gallery-bar button,
+.gallery-count {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wine);
+  white-space: nowrap;
+}
+
+.gallery-bar button {
+  margin: 0;
+  width: 100%;
+  padding: 0.7rem 0;
+  min-height: 2.75rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.gallery-prev { text-align: left; }
+.gallery-next { text-align: right; }
+
+.gallery-bar button:disabled {
+  color: var(--muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.gallery-count {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .offers-list, .menu, .steps, .limits {
@@ -219,7 +287,7 @@ h1 {
   font-size: 0.68rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--wine);
   vertical-align: 0.15em;
 }
 
@@ -317,14 +385,19 @@ footer p {
   .close { padding: 1.75rem 0 1.15rem; }
 
   .gallery {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem;
+    --slide: min(22.5rem, 86%);
+    width: calc(100% + 2.25rem);
+    margin-inline: -1.125rem;
   }
 
-  .frame-hero {
-    grid-column: auto;
-    grid-row: auto;
-    aspect-ratio: 3 / 4;
+  .gallery-bar {
+    width: min(20rem, calc(var(--slide) * 0.9));
+    margin-top: 0.45rem;
+  }
+
+  .gallery-bar button {
+    padding: 0.8rem 0;
+    min-height: 2.9rem;
   }
 }
 
@@ -394,10 +467,23 @@ footer::after,
     background-size: 100% 1px;
   }
 
+  .gallery-track { cursor: grab; }
+
   .invite a,
   .wordmark a,
-  .number a {
+  .number a,
+  .gallery-bar button {
     transition: color 0.35s ease, border-color 0.35s ease;
+  }
+
+  .gallery-bar button:hover:not(:disabled),
+  .gallery-bar button:focus-visible:not(:disabled) {
+    color: #5c2d36;
+  }
+
+  .gallery-bar button:focus-visible {
+    outline: none;
+    box-shadow: inset 0 -1px 0 currentColor;
   }
 
   .invite a:hover,
@@ -413,11 +499,13 @@ footer::after,
 
 @media (prefers-reduced-motion: reduce) {
   .is-lit::after { animation: none; }
+  .gallery-strip, .frame { transition: none; }
 
   .offers-list li,
   .menu li,
   .limits li,
   .invite a,
   .wordmark a,
-  .number a { transition: none; }
+  .number a,
+  .gallery-bar button { transition: none; }
 }
